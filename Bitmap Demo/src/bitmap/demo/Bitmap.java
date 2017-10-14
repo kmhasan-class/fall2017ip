@@ -143,7 +143,97 @@ public class Bitmap {
         return height;
     }
     
+    // amount must be in the range [0, 255]
+    public void add(int amount) {
+        for (int row = 0; row < height; row++)
+            for (int col = 0; col < width; col++) {
+                int inputIndex = (int) (imageDataOffset + (row * width + col) * 3);
+                for (int i = 0; i < 3; i++) {
+                    int color = buffer[inputIndex + i] & 0xFF;
+                    int newColor = color + amount;
+                    if (newColor < 0)
+                        newColor = 0;
+                    if (newColor > 255)
+                        newColor = 255;
+                    buffer[inputIndex + i] = (byte) newColor;
+                }
+            }
+    }
+
+    // final output must be in the range [0, 255]
+    public void scale(double amount) {
+        for (int row = 0; row < height; row++)
+            for (int col = 0; col < width; col++) {
+                int inputIndex = (int) (imageDataOffset + (row * width + col) * 3);
+                for (int i = 0; i < 3; i++) {
+                    int color = buffer[inputIndex + i] & 0xFF;
+                    int newColor = (int) (color * amount);
+                    if (newColor < 0)
+                        newColor = 0;
+                    if (newColor > 255)
+                        newColor = 255;
+                    buffer[inputIndex + i] = (byte) newColor;
+                }
+            }
+    }
     
+    /*
+    Need to fix this rotate method
+    Gives some slanted output, not a proper 90 degress rotation
+    */
+    public void rotate90Clockwise() {
+        long outputWidth = height;
+        long outputHeight = width;
+        
+        byte outputBuffer[] = new byte[buffer.length];
+        System.arraycopy(buffer, 0, outputBuffer, 0, buffer.length);
+        
+        for (int row = 0; row < height; row++)
+            for (int col = 0; col < width; col++) {
+                int inputIndex = (int) (imageDataOffset + (row * width + col) * 3);
+                
+                int outputCol = row;
+                int outputRow = (int) width - 1 - col;
+                int outputIndex = (int) (imageDataOffset + (outputRow * outputWidth + outputCol) * 3);
+                
+                for (int i = 0; i < 3; i++)
+                    outputBuffer[outputIndex + i] = buffer[inputIndex + i];
+            }
+        
+        System.arraycopy(outputBuffer, 0, buffer, 0, buffer.length);
+        updateWidth(outputWidth);
+        updateHeight(outputHeight);
+    }
+    
+    public int[] grayscaleHistogram() {
+        int counter[] = new int[256];
+        for (int row = 0; row < height; row++)
+            for (int col = 0; col < width; col++) {
+                int index = (int) (imageDataOffset + (row * width + col) * 3);
+                int b = buffer[index + 0] & 0xFF;
+                int g = buffer[index + 1] & 0xFF;
+                int r = buffer[index + 2] & 0xFF;
+                int gray = (r + g + b) / 3;
+                counter[gray]++;
+            }
+        return counter;
+    }
+    
+    public void updateWidth(long newWidth) {
+        width = newWidth;
+        byte lastByte = (byte) (width & 0xFF);
+        byte firstByte = (byte) ((width & 0xFF00) >> 8);
+        buffer[18] = lastByte;
+        buffer[19] = firstByte;
+    }
+    
+    public void updateHeight(long newHeight) {
+        height = newHeight;
+        byte lastByte = (byte) (height & 0xFF);
+        byte firstByte = (byte) ((height & 0xFF00) >> 8);
+        buffer[22] = lastByte;
+        buffer[23] = firstByte;
+    }
     
     public Bitmap(String filename) {
         this.filename = filename;
