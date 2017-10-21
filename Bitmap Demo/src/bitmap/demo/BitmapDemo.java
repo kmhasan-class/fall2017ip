@@ -24,14 +24,23 @@ public class BitmapDemo {
     */
     public BitmapDemo() {
         Bitmap bitmap = new Bitmap("fly.bmp");
+        /*
         int histogram[] = bitmap.grayscaleHistogram();
         for (int i = 0; i < histogram.length; i++)
             System.out.printf("%3d: %d\n", i, histogram[i]);
+        */
         //bitmap.setToGray(0, 0, (int) (bitmap.getHeight() / 2 - 1), (int) (bitmap.getWidth() - 1));
         //bitmap.rotate90Clockwise();
-        bitmap.scale(2);
+//        bitmap.scale(2);
         //bitmap.add(100);
+//        bitmap.write("copy.bmp");
+        int t = bitmap.getThresholdValue();
+        long startTime = System.currentTimeMillis();
+        bitmap.applyThreshold(t);
+        long stopTime = System.currentTimeMillis();
+        System.out.println("Time spent: " + (stopTime - startTime) / 1000.0);
         bitmap.write("copy.bmp");
+        System.out.println("Threshold: " + t);
     }
 
     /**
