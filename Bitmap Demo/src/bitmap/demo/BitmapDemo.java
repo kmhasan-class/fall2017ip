@@ -34,13 +34,12 @@ public class BitmapDemo {
 //        bitmap.scale(2);
         //bitmap.add(100);
 //        bitmap.write("copy.bmp");
-        int t = bitmap.getThresholdValue();
+        bitmap.getThreeDifferentThreshold();
         long startTime = System.currentTimeMillis();
-        bitmap.applyThreshold(t);
+        //bitmap.applyThreshold(t);
         long stopTime = System.currentTimeMillis();
         System.out.println("Time spent: " + (stopTime - startTime) / 1000.0);
         bitmap.write("copy.bmp");
-        System.out.println("Threshold: " + t);
     }
 
     /**

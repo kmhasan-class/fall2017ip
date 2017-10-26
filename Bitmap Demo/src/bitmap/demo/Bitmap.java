@@ -232,6 +232,20 @@ public class Bitmap {
         return counter;
     }
 
+    public int[][] histogram() {
+        int counter[][] = new int[3][256];
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                int index = (int) (imageDataOffset + (row * width + col) * 3);
+                for (int channel = 0; channel < 3; channel++) {
+                    int color = buffer[index + channel] & 0xFF;
+                    counter[channel][color]++;
+                }
+            }
+        }
+        return counter;
+    }
+
     public void updateWidth(long newWidth) {
         width = newWidth;
         byte lastByte = (byte) (width & 0xFF);
@@ -267,10 +281,9 @@ public class Bitmap {
 
             long g2sum = 0; // the average intensity of all the pixels in group 2
             long g2count = 0; // the number of pixels in group 2
-            
+
             // Homework: see if you can improve the run time of this algorithm
             // by using two additional 256 element array
-            
             for (int i = 0; i <= t1; i++) {
                 g1sum = g1sum + i * histogram[i];
                 g1count = g1count + histogram[i];
@@ -279,24 +292,50 @@ public class Bitmap {
                 g2sum = g2sum + i * histogram[i];
                 g2count = g2count + histogram[i];
             }
-/*
-            for (int row = 0; row < height; row++) {
-                for (int col = 0; col < width; col++) {
-                    int index = (int) (imageDataOffset + (row * width + col) * 3);
-                    int color = buffer[index + 0] & 0xFF;
+            m1 = (int) (g1sum / g1count);
+            m2 = (int) (g2sum / g2count);
 
-                    if (color > t1) {
-                        // this pixel belongs to group 2
-                        g2sum = g2sum + color;
-                        g2count = g2count + 1;
-                    } else {
-                        // this pixel belongs to group 1
-                        g1sum = g1sum + color;
-                        g1count = g1count + 1;
-                    }
-                }
+            int t2 = (m1 + m2) / 2;
+            diff = Math.abs(t1 - t2);
+            System.out.printf("t1: %d, m1: %d, m2: %d, t2: %d\n", t1, m1, m2, t2);
+            t1 = t2;
+        } while (diff > 1);
+        return t1;
+    }
+
+    public void getThreeDifferentThreshold() {
+        int histogram[][] = histogram();
+        for (int color = 0; color < 3; color++) {
+            int threshold = getThresholdValue(histogram, color);
+            System.out.println("Color " + color + " threshold " + threshold);
+        }
+    }
+    public int getThresholdValue(int histogram[][], int color) {
+        // Algorithm: Basic Global Thresholding
+        //setToGray(0, 0, (int) height, (int) width);
+        int diff;
+        int t1 = 127; // initial guess for threshold
+
+        do {
+            int m1 = 0; // average intensity of all the pixels in group 1
+            int m2 = 0; // average intensity of all the pixels in group 2
+
+            long g1sum = 0; // the average intensity of all the pixels in group 1
+            long g1count = 0; // the number of pixels in group 1
+
+            long g2sum = 0; // the average intensity of all the pixels in group 2
+            long g2count = 0; // the number of pixels in group 2
+
+            // Homework: see if you can improve the run time of this algorithm
+            // by using two additional 256 element array
+            for (int i = 0; i <= t1; i++) {
+                g1sum = g1sum + i * histogram[color][i];
+                g1count = g1count + histogram[color][i];
             }
-*/
+            for (int i = t1 + 1; i < histogram[color].length; i++) {
+                g2sum = g2sum + i * histogram[color][i];
+                g2count = g2count + histogram[color][i];
+            }
             m1 = (int) (g1sum / g1count);
             m2 = (int) (g2sum / g2count);
 
