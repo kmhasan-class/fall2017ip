@@ -18,6 +18,12 @@ import java.util.logging.Logger;
  */
 public class Bitmap {
 
+    enum Channel {
+        BLUE,
+        GREEN,
+        RED;
+    }
+
     private String filename;
     private byte buffer[];
     private long fileSize;
@@ -310,6 +316,44 @@ public class Bitmap {
             System.out.println("Color " + color + " threshold " + threshold);
         }
     }
+
+    public void convolute(Channel channel, int mask[][]) {
+        int maskRowCount = mask.length;
+        int maskColCount = mask[0].length;
+        int maskSum = 0;
+        for (int i= 0; i < maskRowCount; i++)
+            for (int j = 0; j < maskColCount; j++)
+                maskSum += Math.abs(mask[i][j]);
+        
+        int rowOffset = maskRowCount / 2;
+        int colOffset = maskColCount / 2;
+
+        byte tempBuffer[] = new byte[buffer.length];
+        System.arraycopy(buffer, 0, tempBuffer, 0, buffer.length);
+        
+        for (int row = rowOffset; row < height - rowOffset; row++) {
+            for (int col = colOffset; col < width - colOffset; col++) {
+                int index = (int) (imageDataOffset + (row * width + col) * 3);
+//                int color = buffer[index + channel.ordinal()] & 0xFF;
+
+                int sum = 0;
+                for (int mRow = 0; mRow < maskRowCount; mRow++) {
+                    for (int mCol = 0; mCol < maskColCount; mCol++) {
+                        int maskValue = mask[mRow][mCol];
+                        int pixelIndex = (int) (imageDataOffset + ((row + mRow - rowOffset) * width + (col + mCol - colOffset )) * 3);
+                        int pixelValue = buffer[pixelIndex + channel.ordinal()] & 0xFF;
+                        
+                        sum = sum + maskValue * pixelValue;
+                    }
+                }
+                sum /= maskSum;
+                tempBuffer[index + channel.ordinal()] = (byte) sum;
+            }
+        }
+        
+        System.arraycopy(tempBuffer, 0, buffer, 0, buffer.length);
+    }
+
     public int getThresholdValue(int histogram[][], int color) {
         // Algorithm: Basic Global Thresholding
         //setToGray(0, 0, (int) height, (int) width);
