@@ -321,16 +321,18 @@ public class Bitmap {
         int maskRowCount = mask.length;
         int maskColCount = mask[0].length;
         int maskSum = 0;
-        for (int i= 0; i < maskRowCount; i++)
-            for (int j = 0; j < maskColCount; j++)
+        for (int i = 0; i < maskRowCount; i++) {
+            for (int j = 0; j < maskColCount; j++) {
                 maskSum += Math.abs(mask[i][j]);
-        
+            }
+        }
+
         int rowOffset = maskRowCount / 2;
         int colOffset = maskColCount / 2;
 
         byte tempBuffer[] = new byte[buffer.length];
         System.arraycopy(buffer, 0, tempBuffer, 0, buffer.length);
-        
+
         for (int row = rowOffset; row < height - rowOffset; row++) {
             for (int col = colOffset; col < width - colOffset; col++) {
                 int index = (int) (imageDataOffset + (row * width + col) * 3);
@@ -340,9 +342,9 @@ public class Bitmap {
                 for (int mRow = 0; mRow < maskRowCount; mRow++) {
                     for (int mCol = 0; mCol < maskColCount; mCol++) {
                         int maskValue = mask[mRow][mCol];
-                        int pixelIndex = (int) (imageDataOffset + ((row + mRow - rowOffset) * width + (col + mCol - colOffset )) * 3);
+                        int pixelIndex = (int) (imageDataOffset + ((row + mRow - rowOffset) * width + (col + mCol - colOffset)) * 3);
                         int pixelValue = buffer[pixelIndex + channel.ordinal()] & 0xFF;
-                        
+
                         sum = sum + maskValue * pixelValue;
                     }
                 }
@@ -350,8 +352,44 @@ public class Bitmap {
                 tempBuffer[index + channel.ordinal()] = (byte) sum;
             }
         }
-        
+
         System.arraycopy(tempBuffer, 0, buffer, 0, buffer.length);
+    }
+
+    public int getThresholdValueOtsusMethod(int histogram[][], Channel channel) {
+        int levels = histogram[channel.ordinal()].length;
+        double p[] = new double[levels];
+        double cp[] = new double[levels];
+        double ipi[] = new double[levels];
+        double cipi[] = new double[levels];
+        long pixelCount = height * width;
+
+        double previousCp = 0;
+        double previousIpi = 0;
+        for (int i = 0; i < levels; i++) {
+            double frequency = histogram[channel.ordinal()][i];
+            p[i] = frequency / (pixelCount);
+            ipi[i] = i * p[i];
+            cipi[i] = ipi[i] + previousIpi;
+            cp[i] = p[i] + previousCp;
+            previousCp = cp[i];
+            previousIpi = cipi[i];
+        }
+
+        double bestS = 0;
+        int bestK = 0;
+        for (int k = 0; k < levels; k++) {
+            double p1k = cp[k];
+            double p2k = 1 - p1k;
+            double m1k = cipi[k] / p1k;
+            double m2k = (cipi[levels - 1] - cipi[k]) / p2k;
+            double s = p1k * p2k * (m1k - m2k) * (m1k - m2k);
+            if (s > bestS) {
+                bestS = s;
+                bestK = k;
+            }
+        }
+        return bestK;
     }
 
     public int getThresholdValue(int histogram[][], int color) {

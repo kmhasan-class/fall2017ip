@@ -43,7 +43,7 @@ public class BitmapDemo {
 //            {4, 16, 26, 16, 4},
 //            {1, 4, 7, 4, 1 }
 //        };
-
+/*
         // Task for today's class:
         // Find out different convolution masks/kernels
         // and use them to convolute the original image
@@ -57,6 +57,10 @@ public class BitmapDemo {
         bitmap.convolute(Bitmap.Channel.BLUE, mask);
         bitmap.convolute(Bitmap.Channel.GREEN, mask);
         bitmap.convolute(Bitmap.Channel.RED, mask);
+*/
+        int histogram[][] = bitmap.histogram();
+        int t = bitmap.getThresholdValueOtsusMethod(histogram, Bitmap.Channel.RED);
+        System.out.println("Threshold: " + t);
         long stopTime = System.currentTimeMillis();
         System.out.println("Time spent: " + (stopTime - startTime) / 1000.0);
         bitmap.write("copy.bmp");
