@@ -23,6 +23,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
 /**
@@ -51,6 +52,8 @@ public class FXMLDocumentController implements Initializable {
     
     private Mat currentFrame;
     private Mat modifiedFrame;
+    private Image image;
+    private MatOfByte matOfByte;
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -61,6 +64,8 @@ public class FXMLDocumentController implements Initializable {
     private void startCamera() {
         currentFrame = new Mat();
         modifiedFrame = new Mat();
+        matOfByte = new MatOfByte();
+
         videoCapture = new VideoCapture();
         videoCapture.open(0);
         
@@ -69,12 +74,18 @@ public class FXMLDocumentController implements Initializable {
 
     private void grabFrame() {
         videoCapture.read(currentFrame);
-        MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".png", currentFrame, matOfByte);
-        Image image = new Image(new ByteArrayInputStream(matOfByte.toArray()));
+        image = new Image(new ByteArrayInputStream(matOfByte.toArray()));
         Platform.runLater(() -> originalImageView.setImage(image));
         // Convert the current RGB frame to Grayscale
         // and show it on the modified frame
+        
+        Imgproc.cvtColor(currentFrame, modifiedFrame, Imgproc.COLOR_RGB2GRAY);
+        Imgproc.threshold(modifiedFrame, modifiedFrame, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
+        Imgcodecs.imencode(".png", modifiedFrame, matOfByte);
+        image = new Image(new ByteArrayInputStream(matOfByte.toArray()));
+        Platform.runLater(() -> modifiedImageView.setImage(image));
+        
     }
 
     private void startFrameGrabbing() {
