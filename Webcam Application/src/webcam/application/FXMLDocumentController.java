@@ -54,6 +54,12 @@ public class FXMLDocumentController implements Initializable {
     private Mat modifiedFrame;
     private Image image;
     private MatOfByte matOfByte;
+    private double gxKernel[][] = 
+        {
+            {-1, 0, +1},
+            {-2, 0, +2},
+            {-1, 0, +1}
+        };
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -72,6 +78,10 @@ public class FXMLDocumentController implements Initializable {
         startFrameGrabbing();
     }
 
+    private void convolute(Mat mat, double[][] kernel) {
+        
+    }
+    
     private void grabFrame() {
         videoCapture.read(currentFrame);
         Imgcodecs.imencode(".png", currentFrame, matOfByte);
@@ -81,7 +91,8 @@ public class FXMLDocumentController implements Initializable {
         // and show it on the modified frame
         
         Imgproc.cvtColor(currentFrame, modifiedFrame, Imgproc.COLOR_RGB2GRAY);
-        Imgproc.threshold(modifiedFrame, modifiedFrame, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
+        convolute(modifiedFrame, gxKernel);
+        //Imgproc.threshold(modifiedFrame, modifiedFrame, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
         Imgcodecs.imencode(".png", modifiedFrame, matOfByte);
         image = new Image(new ByteArrayInputStream(matOfByte.toArray()));
         Platform.runLater(() -> modifiedImageView.setImage(image));
