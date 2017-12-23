@@ -26,7 +26,7 @@ public class FloodFillDemo {
     private Mat frame1;
     private Mat frame2;
     private Mat originalMat;
-    private final static double EPS = 10;
+    private final static double EPS = 50;
     private int label[][];
     private int currentLabel = 0;
     private int counts[];
@@ -77,6 +77,7 @@ public class FloodFillDemo {
     }
 
     private void process(int channel) {
+        long start = System.currentTimeMillis();
         // In the worst possible scenario we can have a checkerboard pattern where no two
         // pixels are connected. There can be half the total number of pixels in such an image
         counts = new int[(grayscaleMat.height() * grayscaleMat.width()) / 2];
@@ -121,6 +122,8 @@ public class FloodFillDemo {
                 originalMat.put(r, c, color);
             }
 
+        long stop = System.currentTimeMillis();
+        System.out.printf("Time taken: %.4f seconds\n", (stop - start) / 1000.0);
         // write an output for this channel
         Imgcodecs.imwrite("output" + channel + ".png", originalMat);
     }
